@@ -1,0 +1,15 @@
+# Core
+Django>=5.2
+psycopg[binary]>=3.2
+
+# Testing
+pytest>=8.0
+pytest-django>=4.8
+factory-boy>=3.3
+
+# Utilities
+python-decouple>=3.8
+
+# Dev tools
+django-extensions>=3.2
+ipython>=8.0
