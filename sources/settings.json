@@ -1,0 +1,91 @@
+{
+  "general": {
+    "timezone": "America/New_York",
+    "currency": "USD",
+    "date_format": "MM/DD/YYYY",
+    "fiscal_year_start_month": 1
+  },
+
+  "branding": {
+    "display_name": "Acme Cleaning Co.",
+    "tagline": "Spotless Every Time",
+    "primary_color": "#2563EB",
+    "logo_url": ""
+  },
+
+  "leads": {
+    "default_priority": "MEDIUM",
+    "auto_assign": false,
+    "sources": ["website", "referral", "phone", "door-to-door", "social_media"],
+    "follow_up_days": 2
+  },
+
+  "quotes": {
+    "expiry_days": 30,
+    "require_approval_above": 5000.00,
+    "default_terms": "Net 30. Service agreement required for recurring plans.",
+    "allow_discounts": true,
+    "max_discount_pct": 15.0
+  },
+
+  "pricing": {
+    "tax_rate_pct": 7.25,
+    "travel_surcharge_enabled": true,
+    "travel_surcharge_flat": 15.00,
+    "recurrence_multipliers": {
+      "weekly": 1.0,
+      "biweekly": 1.05,
+      "monthly": 1.15,
+      "one_time": 1.25
+    }
+  },
+
+  "scheduling": {
+    "default_buffer_minutes": 15,
+    "rolling_horizon_weeks": 6,
+    "enforce_crew_consistency": true,
+    "max_visits_per_route": 12,
+    "operating_hours": {
+      "start": "07:00",
+      "end": "18:00"
+    },
+    "operating_days": ["mon", "tue", "wed", "thu", "fri"]
+  },
+
+  "quality": {
+    "require_checklist_completion": true,
+    "issue_severity_levels": ["low", "medium", "high", "critical"],
+    "auto_callback_on_severity": "high",
+    "rating_scale_max": 5
+  },
+
+  "communications": {
+    "default_channel": "EMAIL",
+    "retention_days": 730,
+    "auto_log_outbound": true
+  },
+
+  "tasks": {
+    "default_due_hours": {
+      "LEAD_FOLLOW_UP": 48,
+      "QUOTE_SEND": 24,
+      "QUOTE_FOLLOW_UP": 168,
+      "CLIENT_ONBOARDING": 72,
+      "CALLBACK_REQUEST": 4
+    }
+  },
+
+  "notifications": {
+    "notify_on_new_lead": true,
+    "notify_on_quote_accepted": true,
+    "notify_on_overdue_task": true,
+    "notify_on_high_severity_issue": true
+  },
+
+  "feature_flags": {
+    "enable_routing_optimization": false,
+    "enable_sms_channel": false,
+    "enable_client_portal": false,
+    "enable_nps_surveys": true
+  }
+}
