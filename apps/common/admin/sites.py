@@ -6,7 +6,12 @@ Requirement: All apps display under exactly two top-level headings:
   - CRM: everything else (apps.crm.*, apps.scheduling.*, apps.common.*)
 
 This override rewrites get_app_list() to group by prefix.
+
+Admin access is granted to:
+  - Superusers (is_staff + is_superuser) — always
+  - Users with an active membership in the resolved org — Phase 1 admin-first
 """
+
 from django.contrib.admin import AdminSite
 
 
@@ -20,6 +25,32 @@ class FlowLynkAdminSite(AdminSite):
         "apps.platform.": "Platform",
     }
     DEFAULT_GROUP = "CRM"
+
+    def has_permission(self, request):
+        """
+        Grant admin access if the user is:
+        1. A Django superuser/staff (standard admin behavior), OR
+        2. An authenticated user with an active membership in the
+           resolved tenant org (set by TenantMiddleware).
+
+        This is what allows tenant users (who don't have is_staff=True)
+        to use the admin in Phase 1. RBAC capabilities control what
+        they can see/do once inside — this just gets them through the door.
+        """
+        user = request.user
+        if not user.is_active:
+            return False
+
+        # Standard Django admin check
+        if user.is_staff:
+            return True
+
+        # Phase 1 tenant access: active membership = admin access
+        membership = getattr(request, "membership", None)
+        if membership is not None and membership.is_active:
+            return True
+
+        return False
 
     def _get_group(self, app_name: str) -> str:
         """Resolve the admin group heading for a given app name."""

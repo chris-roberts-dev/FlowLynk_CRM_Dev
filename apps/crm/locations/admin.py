@@ -4,7 +4,6 @@ apps.crm.locations.admin — Location admin configuration.
 Uses TenantScopedAdmin to auto-filter by organization.
 Full hierarchy admin (Region/Market inlines) built in EPIC 5.
 """
-
 from django.contrib import admin
 
 from apps.common.admin import TenantScopedAdmin, flowlynk_admin_site

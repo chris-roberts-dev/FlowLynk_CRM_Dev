@@ -8,6 +8,7 @@ All environment variables are read via python-decouple so that:
 - os.environ is used in prod (Docker, systemd, etc.)
 - Defaults are explicit and documented
 """
+
 from pathlib import Path
 
 from decouple import Csv, config
@@ -89,14 +90,13 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # Tenant resolution middleware — added in EPIC 1
-    # "apps.common.tenancy.middleware.TenantMiddleware",
-    # Correlation-ID middleware — added in EPIC 4
-    # "apps.common.utils.middleware.CorrelationIdMiddleware",
+    # Tenant resolution: extracts subdomain, resolves Organization + Membership
+    "apps.common.tenancy.middleware.TenantMiddleware",
+    # Correlation ID: assigns unique request ID for tracing through logs + audit
+    "apps.common.utils.middleware.CorrelationIdMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 # ──────────────────────────────────────────────
 # URL config
@@ -159,7 +159,9 @@ AUTH_USER_MODEL = "platform_accounts.User"
 # Password validation
 # ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -196,21 +198,51 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PLATFORM_BASE_DOMAIN = config("PLATFORM_BASE_DOMAIN", default="lvh.me")
 PLATFORM_PORT = config("PLATFORM_PORT", default="8000")
 
+# ──────────────────────────────────────────────
+# Sessions & Auth
+# ──────────────────────────────────────────────
+# Share session cookie across subdomains so login on base domain (lvh.me)
+# carries over to tenant subdomains (acme.lvh.me).
+# The leading dot is required for subdomain sharing.
+SESSION_COOKIE_DOMAIN = config(
+    "SESSION_COOKIE_DOMAIN",
+    default=f".{PLATFORM_BASE_DOMAIN}",
+)
+
+# Where to redirect when @login_required triggers
+LOGIN_URL = "/auth/login/"
+LOGIN_REDIRECT_URL = "/auth/select-org/"
+LOGOUT_REDIRECT_URL = "/"
+
 # Logging — structured, ready for Sentry in prod
 _LOG_LEVEL = config("LOG_LEVEL", default="DEBUG")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "context": {
+            "()": "apps.common.utils.middleware.CorrelationIdFilter",
+        },
+    },
     "formatters": {
         "verbose": {
             "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        },
+        "structured": {
+            "format": (
+                "[{asctime}] {levelname} {name} "
+                "org={org_slug} actor={actor_id} cid={correlation_id} "
+                "{message}"
+            ),
             "style": "{",
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "structured",
+            "filters": ["context"],
         },
     },
     "root": {

@@ -6,6 +6,8 @@ All models that need created_at / updated_at should inherit from TimestampedMode
 """
 from django.db import models
 
+from apps.common.tenancy.managers import TenantManager, UnscopedTenantManager
+
 
 class TimestampedModel(models.Model):
     """Abstract base providing created_at / updated_at timestamps."""
@@ -78,9 +80,8 @@ class TenantModel(TimestampedModel, AuditFieldsMixin):
     - organization FK (direct tenant scoping — Pattern A)
     - Timestamps (created_at, updated_at)
     - Audit fields (created_by, updated_by)
-
-    Subclasses should add a TenantManager as their default manager
-    once the tenancy module is wired (EPIC 1).
+    - TenantManager as default manager (auto-filters by current org context)
+    - UnscopedTenantManager as escape hatch (Model.unscoped_objects.all())
     """
 
     organization = models.ForeignKey(
@@ -89,6 +90,14 @@ class TenantModel(TimestampedModel, AuditFieldsMixin):
         related_name="%(app_label)s_%(class)s_set",
         help_text="Owning organization (tenant).",
     )
+
+    # Default manager: auto-scopes to current organization context.
+    # Falls back to unfiltered if no context is set (management commands, migrations).
+    objects = TenantManager()
+
+    # Escape hatch: never auto-filters. Use for platform admin, data migrations,
+    # cross-tenant reporting.
+    unscoped_objects = UnscopedTenantManager()
 
     class Meta:
         abstract = True

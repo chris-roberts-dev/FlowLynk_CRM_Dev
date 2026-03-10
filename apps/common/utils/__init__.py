@@ -1,3 +1,7 @@
-from apps.common.utils.helpers import generate_correlation_id
+"""
+apps.common.utils — Shared utilities for FlowLynk.
 
-__all__ = ["generate_correlation_id"]
+Import directly from submodules:
+    from apps.common.utils.helpers import generate_correlation_id
+    from apps.common.utils.middleware import CorrelationIdMiddleware, get_correlation_id
+"""

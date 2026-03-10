@@ -4,6 +4,7 @@ apps.platform.accounts.models — Global User and tenant-scoped Membership.
 User is the global identity (email-based login).
 Membership binds a User to an Organization with status tracking.
 """
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -156,3 +157,18 @@ class Membership(TimestampedModel):
     @property
     def is_active(self):
         return self.status == MembershipStatus.ACTIVE
+
+
+class TenantMember(Membership):
+    """
+    Proxy model for tenant-facing member management.
+
+    This gives tenant admins their own "Members" entry in the admin
+    (under CRM) separate from the platform-level Membership admin.
+    No new database table is created.
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = "Member"
+        verbose_name_plural = "Members"

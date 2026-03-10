@@ -1,6 +1,8 @@
-from apps.common.tenancy.managers import TenantManager, TenantQuerySet
+"""
+apps.common.tenancy — Tenant isolation infrastructure.
 
-__all__ = [
-    "TenantManager",
-    "TenantQuerySet",
-]
+Import directly from submodules to avoid circular imports:
+    from apps.common.tenancy.context import get_current_organization
+    from apps.common.tenancy.managers import TenantManager
+    from apps.common.tenancy.middleware import TenantMiddleware
+"""

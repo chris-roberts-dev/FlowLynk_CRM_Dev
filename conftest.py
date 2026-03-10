@@ -29,7 +29,6 @@ def make_organization(db):
         defaults = {
             "name": f"Test Org {_counter}",
             "slug": f"test-org-{_counter}",
-            "status": OrganizationStatus.ACTIVE,
         }
         defaults.update(kwargs)
         return Organization.objects.create(**defaults)
@@ -79,7 +78,7 @@ def make_membership(db):
 @pytest.fixture
 def org(make_organization):
     """A single active Organization for simple tests."""
-    return make_organization()
+    return make_organization(status=OrganizationStatus.ACTIVE)
 
 
 @pytest.fixture
