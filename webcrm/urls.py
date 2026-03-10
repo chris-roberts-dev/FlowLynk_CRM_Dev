@@ -2,22 +2,21 @@
 FlowLynk — Root URL configuration.
 
 Admin is served via custom AdminSite (Platform/CRM grouping).
-Public landing page served at root.
-Auth views will be added in EPIC 2.
+Public landing page served at root (base domain).
+Auth views served at /auth/ (base domain).
 """
-
-from django.urls import path
-from django.views.generic import TemplateView
+from django.urls import include, path
 
 from apps.common.admin.sites import flowlynk_admin_site
+from apps.platform.organizations.views import LandingPageView
 
 urlpatterns = [
-    # Public landing page
-    path(
-        "", TemplateView.as_view(template_name="platform/landing.html"), name="landing"
-    ),
+    # Public landing page (base domain) — handles ?error= from TenantMiddleware
+    path("", LandingPageView.as_view(), name="landing"),
+
+    # Authentication (base domain)
+    path("auth/", include("apps.platform.accounts.urls")),
+
     # Custom admin site with Platform / CRM grouping
     path("admin/", flowlynk_admin_site.urls),
-    # Auth views — added in EPIC 2
-    # path("auth/", include("apps.platform.accounts.urls")),
 ]

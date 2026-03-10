@@ -47,7 +47,7 @@ class TestAdminSiteGrouping:
         assert platform_group is not None, "Platform group not found"
 
         model_names = [m["name"] for m in platform_group["models"]]
-        assert "Organization" in model_names
+        assert "Organizations" in model_names
 
     def test_location_in_crm_group(self, make_user):
         """Location model should appear under CRM."""
@@ -61,4 +61,4 @@ class TestAdminSiteGrouping:
         assert crm_group is not None, "CRM group not found"
 
         model_names = [m["name"] for m in crm_group["models"]]
-        assert "Location" in model_names
+        assert "Locations" in model_names

@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% comment %}
+FlowLynk admin base template override.
+
+Adds:
+- Impersonation banner when superuser accesses an org without a real membership
+- Logout link pointing to custom logout view
+{% endcomment %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .impersonation-banner {
+        background-color: #ffc107;
+        color: #000;
+        text-align: center;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        border-bottom: 1px solid #e0a800;
+    }
+    .impersonation-banner a {
+        color: #000;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if request.membership and request.membership.pk is None %}
+<div class="impersonation-banner">
+    &#x1f6e1; Platform admin — you are viewing
+    <strong>{{ request.organization.name }}</strong>
+    without a membership.
+    <a href="{% url 'logout' %}">Exit</a>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}
