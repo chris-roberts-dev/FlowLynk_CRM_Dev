@@ -358,10 +358,10 @@ These EPICs establish the infrastructure that every subsequent feature depends o
 | EPIC | Name | Status | Description |
 |------|------|--------|-------------|
 | 0 | Project Scaffold | ✅ Complete | Directory structure, settings, base classes, foundational models, admin grouping, test fixtures |
-| 1 | Tenancy Foundation | 🔲 Next | Subdomain-based tenant resolution middleware, auto-filtering querysets, landing page at base domain, invalid/suspended org handling, tenant isolation tests |
-| 2 | Identity, Membership & Auth | 🔲 Planned | Login flow (email → resolve membership → tenant redirect), org picker for multi-membership, logout to base domain, impersonation banner, session scoping |
-| 3 | RBAC | 🔲 Planned | Capability global catalog, Role (org-scoped), RoleCapability, MembershipRole, ScopeRule, RBACService with `has_capability` and `get_scope`, capability seeding migration, role import (CSV, dry-run, idempotent) |
-| 4 | Audit Logging | 🔲 Planned | AuditEvent model, AuditService, correlation ID middleware, structured JSON logging, read-only admin with filters |
+| 1 | Tenancy Foundation | ✅ Complete | Subdomain-based tenant resolution middleware, auto-filtering querysets, landing page at base domain, invalid/suspended org handling, tenant isolation tests |
+| 2 | Identity, Membership & Auth | ✅ Complete | Login flow (email → resolve membership → tenant redirect), org picker for multi-membership, logout to base domain, impersonation banner, session scoping |
+| 3 | RBAC | ✅ Complete | Capability global catalog, Role (org-scoped), RoleCapability, MembershipRole, ScopeRule, RBACService with `has_capability` and `get_scope`, capability seeding migration, role import (CSV, dry-run, idempotent) |
+| 4 | Audit Logging | ✅ Complete | AuditEvent model, AuditService, correlation ID middleware, structured JSON logging, read-only admin with filters |
 
 ### Phase 1 — Core CRM Pipeline
 
@@ -369,13 +369,13 @@ These EPICs build the lead → quote → client conversion pipeline that is cent
 
 | EPIC | Name | Status | Description |
 |------|------|--------|-------------|
-| 5 | Location Hierarchy & Import Framework | 🔲 Planned | Common import framework (CSV parsing, dry-run, row-level errors, ImportRun tracking), Region → Market → Location models, location hierarchy importer, admin upload actions |
+| 5 | Location Hierarchy & Import Framework | ✅ Complete | Common import framework (CSV parsing, dry-run, row-level errors, ImportRun tracking), Region → Market → Location models, location hierarchy importer, admin upload actions |
 | 6 | Catalog & Checklist Templates | 🔲 Planned | CatalogItem (Service / Add-on / Product / Bundle), ChecklistTemplate, checklist items, catalog importer (CSV, idempotent) |
 | 7 | Leads & Pricing Engine | 🔲 Planned | Lead model with full contact and service request fields, PricingVersion, PricingRule, PricingSnapshot, PricingService.preview(), admin "Preview Price" action that creates a snapshot without conversion |
 | 8 | Quotes & Lead→Quote Conversion | 🔲 Planned | Quote model with versions, line items, and status lifecycle, atomic LeadService.convert_to_quote() with select_for_update and idempotency, admin "Convert Lead → Quote" action |
 | 9 | Clients & Quote→Client Conversion | 🔲 Planned | Client, Contact, ServiceAddress, Agreement/ServicePlan, atomic QuoteService.accept() that creates all downstream records, soft-delete on Client and ServiceAddress |
 
-### Phase 1 — Operational Extensions
+### Phase 2 — Operational Extensions
 
 These EPICs add task management, communications, and scheduling capabilities.
 
@@ -386,16 +386,16 @@ These EPICs add task management, communications, and scheduling capabilities.
 | 12 | Scheduling & Routing | 🔲 Planned | VisitPlan with recurrence rules and consistency preferences, VisitInstance with status and checklist/issue links, Assignment model, RouteBoard per location/day with ordered sequence and density metrics, rolling horizon generation, exception queue (unassigned, over-capacity, long travel, late risk) |
 | 13 | Quality & Trust | 🔲 Planned | ChecklistCompletion per visit, Issue model with type/severity/lifecycle, Rating per visit with optional NPS, rework workflow (open → triaged → scheduled → resolved), high-severity auto-triggers callback task |
 
-### Phase 1 — Reporting & Hardening
+### Phase 3 — Reporting & Hardening
 
 | EPIC | Name | Status | Description |
 |------|------|--------|-------------|
 | 14 | Reporting & KPIs | 🔲 Planned | Indexed queries for sales metrics (lead volume, conversion rates, time-to-quote), ops metrics (utilization, on-time rate, rework rate), density metrics (drive time, visits/hour), trust metrics (rating trends, issue recurrence), task throughput and overdue rates, communications response times |
 | 15 | Hardening & Production Readiness | 🔲 Planned | Host header validation, TLS enforcement, CSRF/session hardening, N+1 query audit across all admin views, prod settings finalization, Celery/RQ wiring for async jobs, Sentry integration, comprehensive tenant leak test suite covering ORM, admin, and service layers |
 
-### Phase 2 — Custom Tenant UI (Future)
+### Phase 4 — Custom Tenant UI (Future)
 
-Phase 2 replaces the Django Admin with a Bootstrap 5 tenant-facing UI. This includes custom landing pages with optional tenant branding on subdomains, a login flow with email-based org discovery and org picker, dashboard views, and operator workflows designed for speed and mobile responsiveness. Phase 2 is not yet scoped in detail and will not begin until Phase 1 is complete and stable.
+Phase 4 replaces the Django Admin with a Bootstrap 5 tenant-facing UI. This includes custom landing pages with optional tenant branding on subdomains, a login flow with email-based org discovery and org picker, dashboard views, and operator workflows designed for speed and mobile responsiveness. Phase 2 is not yet scoped in detail and will not begin until Phase 1 is complete and stable.
 
 ---
 
