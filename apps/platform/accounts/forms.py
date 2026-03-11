@@ -149,7 +149,8 @@ class TenantMemberChangeForm(forms.ModelForm):
     """
     Form for editing an existing member in the tenant context.
 
-    Shows user info as read-only and allows editing membership status.
+    Shows user info as read-only and allows editing membership status
+    and geographic assignments (region, market, location).
     """
 
     # Read-only display fields pulled from the related User
@@ -161,7 +162,7 @@ class TenantMemberChangeForm(forms.ModelForm):
         from apps.platform.accounts.models import TenantMember
 
         model = TenantMember
-        fields = ["status"]
+        fields = ["status", "assigned_region", "assigned_market", "default_location"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -169,3 +170,18 @@ class TenantMemberChangeForm(forms.ModelForm):
             self.fields["email"].initial = self.instance.user.email
             self.fields["first_name"].initial = self.instance.user.first_name
             self.fields["last_name"].initial = self.instance.user.last_name
+
+            # Filter geographic dropdowns to the member's organization
+            org = self.instance.organization
+            if org:
+                from apps.crm.locations.models import Location, Market, Region
+
+                self.fields["assigned_region"].queryset = (
+                    Region.unscoped_objects.filter(organization=org, is_active=True)
+                )
+                self.fields["assigned_market"].queryset = (
+                    Market.unscoped_objects.filter(organization=org, is_active=True)
+                )
+                self.fields["default_location"].queryset = (
+                    Location.unscoped_objects.filter(organization=org, is_active=True)
+                )

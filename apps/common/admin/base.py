@@ -43,7 +43,34 @@ class TenantScopedAdmin(admin.ModelAdmin):
         org = getattr(request, "organization", None)
         if org is not None:
             qs = qs.filter(organization=org)
+
+        # Apply RBAC scope filtering if:
+        # 1. Not a superuser (superusers always see everything)
+        # 2. The model declares at least one scope_field_*
+        # 3. The membership exists
+        membership = getattr(request, "membership", None)
+        if (
+            not request.user.is_superuser
+            and membership is not None
+            and membership.pk is not None
+            and self._model_has_scope_fields()
+        ):
+            from apps.common.tenancy.scoping import apply_scope
+
+            qs = apply_scope(qs, membership, self.model)
+
         return qs
+
+    def _model_has_scope_fields(self):
+        """Check if the model declares any scope filter paths."""
+        return any(
+            [
+                getattr(self.model, "scope_field_region", None),
+                getattr(self.model, "scope_field_market", None),
+                getattr(self.model, "scope_field_location", None),
+                getattr(self.model, "scope_field_assigned_to", None),
+            ]
+        )
 
     # ── Form field exclusion ─────────────────────
 

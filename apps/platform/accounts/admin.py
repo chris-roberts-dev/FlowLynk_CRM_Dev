@@ -126,10 +126,11 @@ class TenantMemberAdmin(admin.ModelAdmin):
         "get_first_name",
         "get_last_name",
         "status",
+        "get_assignment",
         "last_login_at",
         "created_at",
     )
-    list_filter = ("status",)
+    list_filter = ("status", "assigned_region", "assigned_market")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     readonly_fields = ("created_at", "updated_at", "last_login_at")
     inlines = [MembershipRoleInline]
@@ -148,10 +149,31 @@ class TenantMemberAdmin(admin.ModelAdmin):
     def get_last_name(self, obj):
         return obj.user.last_name
 
+    @admin.display(description="Assignment")
+    def get_assignment(self, obj):
+        """Show the most specific geographic assignment."""
+        if obj.default_location:
+            return str(obj.default_location)
+        if obj.assigned_market:
+            return str(obj.assigned_market)
+        if obj.assigned_region:
+            return str(obj.assigned_region)
+        return "—"
+
     # ── Queryset: org-scoped ─────────────────
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("user", "organization")
+        qs = (
+            super()
+            .get_queryset(request)
+            .select_related(
+                "user",
+                "organization",
+                "assigned_region",
+                "assigned_market",
+                "default_location",
+            )
+        )
         org = getattr(request, "organization", None)
         if org is not None:
             qs = qs.filter(organization=org)
@@ -181,6 +203,17 @@ class TenantMemberAdmin(admin.ModelAdmin):
             return [
                 ("User Account", {"fields": ("email", "first_name", "last_name")}),
                 ("Membership", {"fields": ("status",)}),
+                (
+                    "Geographic Assignment",
+                    {
+                        "fields": (
+                            "assigned_region",
+                            "assigned_market",
+                            "default_location",
+                        ),
+                        "description": "Assign this member to a region, market, and/or location. These control the member's operating scope.",
+                    },
+                ),
                 (
                     "Timestamps",
                     {"fields": ("last_login_at", "created_at", "updated_at")},

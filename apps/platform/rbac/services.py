@@ -8,6 +8,7 @@ Provides:
 - get_all_capabilities(membership) → set of codes
 - Role import (CSV, dry-run, idempotent)
 """
+
 import csv
 import io
 import logging
@@ -35,7 +36,9 @@ class PermissionDenied(Exception):
         self.membership = membership
         user_info = ""
         if membership:
-            user_info = f" (user={membership.user.email}, org={membership.organization.slug})"
+            user_info = (
+                f" (user={membership.user.email}, org={membership.organization.slug})"
+            )
         super().__init__(
             f"Permission denied: missing capability '{capability_code}'{user_info}"
         )
@@ -116,10 +119,13 @@ def get_scope(membership, domain: str = "*") -> ScopeLevel:
     return ScopeLevel.SELF_ASSIGNED
 
 
-# Scope ordering: broader scopes win
+# Scope ordering: higher number = broader visibility
 _SCOPE_ORDER = {
     ScopeLevel.SELF_ASSIGNED: 0,
-    ScopeLevel.ALL_ORG: 10,
+    ScopeLevel.LOCATION: 10,
+    ScopeLevel.MARKET: 20,
+    ScopeLevel.REGION: 30,
+    ScopeLevel.ALL_ORG: 40,
 }
 
 
@@ -187,7 +193,9 @@ class RoleImportResult:
         return len(self.errors) > 0
 
 
-def import_roles_from_csv(organization, csv_content: str, dry_run: bool = True) -> RoleImportResult:
+def import_roles_from_csv(
+    organization, csv_content: str, dry_run: bool = True
+) -> RoleImportResult:
     """
     Import roles from CSV content.
 
@@ -207,16 +215,20 @@ def import_roles_from_csv(organization, csv_content: str, dry_run: bool = True) 
     # Validate header
     required_fields = {"code", "name"}
     if not required_fields.issubset(set(reader.fieldnames or [])):
-        result.errors.append({
-            "line": 0,
-            "code": "",
-            "error": f"CSV must have columns: {', '.join(sorted(required_fields))}. "
-                     f"Found: {', '.join(reader.fieldnames or [])}",
-        })
+        result.errors.append(
+            {
+                "line": 0,
+                "code": "",
+                "error": f"CSV must have columns: {', '.join(sorted(required_fields))}. "
+                f"Found: {', '.join(reader.fieldnames or [])}",
+            }
+        )
         return result
 
     # Pre-load active capabilities for validation
-    valid_caps = set(Capability.objects.filter(is_active=True).values_list("code", flat=True))
+    valid_caps = set(
+        Capability.objects.filter(is_active=True).values_list("code", flat=True)
+    )
 
     rows = []
     seen_codes = set()
@@ -230,39 +242,55 @@ def import_roles_from_csv(organization, csv_content: str, dry_run: bool = True) 
 
         # Validate required fields
         if not code:
-            result.errors.append({"line": line_num, "code": "", "error": "Missing 'code'"})
+            result.errors.append(
+                {"line": line_num, "code": "", "error": "Missing 'code'"}
+            )
             continue
         if not name:
-            result.errors.append({"line": line_num, "code": code, "error": "Missing 'name'"})
+            result.errors.append(
+                {"line": line_num, "code": code, "error": "Missing 'name'"}
+            )
             continue
 
         # Duplicate code check within the file
         if code in seen_codes:
-            result.errors.append({"line": line_num, "code": code, "error": f"Duplicate code '{code}' in file"})
+            result.errors.append(
+                {
+                    "line": line_num,
+                    "code": code,
+                    "error": f"Duplicate code '{code}' in file",
+                }
+            )
             continue
         seen_codes.add(code)
 
         # Parse capabilities
-        cap_codes = [c.strip() for c in caps_str.split(",") if c.strip()] if caps_str else []
+        cap_codes = (
+            [c.strip() for c in caps_str.split(",") if c.strip()] if caps_str else []
+        )
         unknown_caps = [c for c in cap_codes if c not in valid_caps]
         if unknown_caps:
-            result.errors.append({
-                "line": line_num,
-                "code": code,
-                "error": f"Unknown capabilities: {', '.join(unknown_caps)}",
-            })
+            result.errors.append(
+                {
+                    "line": line_num,
+                    "code": code,
+                    "error": f"Unknown capabilities: {', '.join(unknown_caps)}",
+                }
+            )
             continue
 
         is_system = is_system_str in ("true", "1", "yes")
 
-        rows.append({
-            "line": line_num,
-            "code": code,
-            "name": name,
-            "description": description,
-            "is_system": is_system,
-            "cap_codes": cap_codes,
-        })
+        rows.append(
+            {
+                "line": line_num,
+                "code": code,
+                "name": name,
+                "description": description,
+                "is_system": is_system,
+                "cap_codes": cap_codes,
+            }
+        )
 
     # If there are validation errors, stop before DB changes
     if result.has_errors:
@@ -283,7 +311,8 @@ def import_roles_from_csv(organization, csv_content: str, dry_run: bool = True) 
                     existing.name != row_data["name"]
                     or existing.description != row_data["description"]
                     or existing.is_system != row_data["is_system"]
-                    or set(existing.capabilities.values_list("code", flat=True)) != set(row_data["cap_codes"])
+                    or set(existing.capabilities.values_list("code", flat=True))
+                    != set(row_data["cap_codes"])
                 )
                 if changed:
                     result.updated.append(row_data["code"])

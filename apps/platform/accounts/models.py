@@ -108,6 +108,9 @@ class Membership(TimestampedModel):
     Multi-membership is supported: one User may belong to multiple Orgs.
     Each Membership carries its own status and is the anchor for
     RBAC grants (MembershipRole) and audit trails.
+
+    Geographic assignments (region/market/location) control the member's
+    default scope and are used by future scope filtering (EPIC 3 ScopeRule).
     """
 
     user = models.ForeignKey(
@@ -127,13 +130,32 @@ class Membership(TimestampedModel):
         db_index=True,
     )
     last_login_at = models.DateTimeField(null=True, blank=True)
+
+    # Geographic assignments — nullable, set by tenant admin.
+    # These define the member's primary operating scope.
+    assigned_region = models.ForeignKey(
+        "crm_locations.Region",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="Primary region assignment for this member.",
+    )
+    assigned_market = models.ForeignKey(
+        "crm_locations.Market",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="Primary market assignment for this member.",
+    )
     default_location = models.ForeignKey(
         "crm_locations.Location",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="+",
-        help_text="Optional default location context for this member.",
+        help_text="Primary location assignment for this member.",
     )
 
     class Meta:

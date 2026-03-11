@@ -1,0 +1,8 @@
+level,code,name,parent_code,street,city,state,postal_code,country,timezone
+REGION,SE,Southeast,,,,,,US,
+REGION,MW,Midwest,,,,,,US,
+MARKET,NSH,Nashville,SE,,,,,US,
+MARKET,STL,St. Louis,MW,,,,,US,
+LOCATION,NSH-001,Nashville Metro,NSH,123 Peachtree St,Nashville,TN,37214,US,America/Chicago
+LOCATION,NSH-002,Upper Cumberland,NSH,456 Magnolia Ave,Cookeville,TN,38501,US,America/Chicago
+LOCATION,STL-001,St. Louis County,STL,789 Broadway,St. Louis,MO,63123,US,America/Chicago

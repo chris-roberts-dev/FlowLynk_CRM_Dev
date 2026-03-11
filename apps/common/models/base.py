@@ -4,6 +4,7 @@ apps.common.models.base — Abstract base models for FlowLynk.
 All tenant-scoped models should inherit from TenantModel.
 All models that need created_at / updated_at should inherit from TimestampedModel.
 """
+
 from django.db import models
 
 from apps.common.tenancy.managers import TenantManager, UnscopedTenantManager
@@ -82,6 +83,24 @@ class TenantModel(TimestampedModel, AuditFieldsMixin):
     - Audit fields (created_by, updated_by)
     - TenantManager as default manager (auto-filters by current org context)
     - UnscopedTenantManager as escape hatch (Model.unscoped_objects.all())
+    - Scope field declarations for RBAC visibility filtering
+
+    Scope fields (override in subclasses):
+        scope_field_region:      queryset filter path to a Region FK
+        scope_field_market:      queryset filter path to a Market FK
+        scope_field_location:    queryset filter path to a Location FK/PK
+        scope_field_assigned_to: queryset filter path to a Membership FK
+
+    Example for Location:
+        scope_field_region = "market__region"
+        scope_field_market = "market"
+        scope_field_location = "pk"
+
+    Example for a future Lead model:
+        scope_field_region = "location__market__region"
+        scope_field_market = "location__market"
+        scope_field_location = "location"
+        scope_field_assigned_to = "assigned_to"
     """
 
     organization = models.ForeignKey(
@@ -92,14 +111,19 @@ class TenantModel(TimestampedModel, AuditFieldsMixin):
     )
 
     # Default manager: auto-scopes to current organization context.
-    # Falls back to unfiltered if no context is set (management commands, migrations).
     objects = TenantManager()
 
-    # Escape hatch: never auto-filters. Use for platform admin, data migrations,
-    # cross-tenant reporting.
+    # Escape hatch: never auto-filters.
     unscoped_objects = UnscopedTenantManager()
+
+    # ── Scope filter declarations ────────────
+    # Override these in subclasses to enable RBAC scope filtering.
+    # Each value is a queryset filter path (e.g. "market__region").
+    # None means this scope level doesn't apply to this model.
+    scope_field_region = None
+    scope_field_market = None
+    scope_field_location = None
+    scope_field_assigned_to = None
 
     class Meta:
         abstract = True
-        # Composite index on (organization, created_at) added by
-        # concrete subclasses via Meta.indexes.

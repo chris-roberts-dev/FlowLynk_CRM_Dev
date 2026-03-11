@@ -10,6 +10,7 @@ Role is an org-scoped bundle of capabilities.
 MembershipRole assigns roles to memberships.
 ScopeRule defines the visibility level for a role within an org.
 """
+
 from django.db import models
 
 from apps.common.models.base import TimestampedModel
@@ -185,17 +186,15 @@ class ScopeLevel(models.TextChoices):
     """
     Defines the breadth of records a role can see.
 
-    Phase 1: ALL_ORG and SELF_ASSIGNED only.
-    Future: REGION, MARKET, LOCATION, TEAM.
+    Ordered broadest → narrowest:
+        ALL_ORG > REGION > MARKET > LOCATION > SELF_ASSIGNED
     """
 
     ALL_ORG = "ALL_ORG", "All records in the organization"
-    SELF_ASSIGNED = "SELF_ASSIGNED", "Only records assigned to me"
-    # Future scope levels (uncomment when implemented):
-    # REGION = "REGION", "Records in assigned regions"
-    # MARKET = "MARKET", "Records in assigned markets"
-    # LOCATION = "LOCATION", "Records in assigned locations"
-    # TEAM = "TEAM", "Records assigned to my team(s)"
+    REGION = "REGION", "Records in assigned region"
+    MARKET = "MARKET", "Records in assigned market"
+    LOCATION = "LOCATION", "Records in assigned location"
+    SELF_ASSIGNED = "SELF_ASSIGNED", "Only records assigned to user"
 
 
 class ScopeRule(TimestampedModel):
