@@ -1,33 +1,33 @@
 """
 Management command: import_catalog
 
-Import catalog items (services, add-ons, products, bundles) from CSV.
+Import products or services from CSV.
 
 Usage:
-    python manage.py import_catalog acme catalog.csv
-    python manage.py import_catalog acme catalog.csv --commit
+    python manage.py import_catalog acme products products.csv
+    python manage.py import_catalog acme services services.csv --commit
 """
 
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.crm.catalog.services import CatalogImporter
+from apps.crm.catalog.services import ProductImporter, ServiceImporter
 from apps.platform.organizations.models import Organization
 
 
 class Command(BaseCommand):
-    help = "Import catalog items from CSV. Default is dry-run."
+    help = "Import products or services from CSV. Default is dry-run."
 
     def add_arguments(self, parser):
         parser.add_argument("org_slug", help="Organization slug.")
-        parser.add_argument("csv_file", help="Path to the CSV file.")
         parser.add_argument(
-            "--commit",
-            action="store_true",
-            help="Apply changes. Without this flag, runs in dry-run mode.",
+            "type", choices=["products", "services"], help="What to import."
         )
+        parser.add_argument("csv_file", help="Path to the CSV file.")
+        parser.add_argument("--commit", action="store_true", help="Apply changes.")
 
     def handle(self, *args, **options):
         org_slug = options["org_slug"]
+        import_type = options["type"]
         csv_path = options["csv_file"]
         dry_run = not options["commit"]
 
@@ -42,10 +42,12 @@ class Command(BaseCommand):
         except FileNotFoundError:
             raise CommandError(f"File not found: {csv_path}")
 
-        mode = "DRY RUN" if dry_run else "COMMIT"
-        self.stdout.write(f"\n[{mode}] Importing catalog into '{org.name}'...\n")
+        importer_cls = ProductImporter if import_type == "products" else ServiceImporter
+        importer = importer_cls(organization=org)
 
-        importer = CatalogImporter(organization=org)
+        mode = "DRY RUN" if dry_run else "COMMIT"
+        self.stdout.write(f"\n[{mode}] Importing {import_type} into '{org.name}'...\n")
+
         result = importer.run(csv_content, dry_run=dry_run, file_name=csv_path)
 
         if result.errors:
