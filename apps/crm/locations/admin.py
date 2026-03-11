@@ -1,12 +1,15 @@
 """
 apps.crm.locations.admin — Location hierarchy admin.
 
-Region, Market, Location with hierarchy display and inline children.
+Region, Market, Location with hierarchy display, inline children, and CSV import.
+The import button is on the Region list — it imports the full hierarchy
+(Regions, Markets, Locations) from a single CSV.
 """
 
 from django.contrib import admin
 
 from apps.common.admin import TenantScopedAdmin, flowlynk_admin_site
+from apps.common.admin.import_mixin import ImportCSVMixin
 from apps.crm.locations.models import Location, Market, Region
 
 
@@ -28,10 +31,22 @@ class LocationInline(admin.TabularInline):
 
 
 # ──────────────────────────────────────────────
-# Region
+# Region (with hierarchy CSV import)
 # ──────────────────────────────────────────────
 @admin.register(Region, site=flowlynk_admin_site)
-class RegionAdmin(TenantScopedAdmin):
+class RegionAdmin(ImportCSVMixin, TenantScopedAdmin):
+    # Import configuration — imports full hierarchy (Region → Market → Location)
+    import_url_name = "location-import"
+    import_button_label = "Import Locations CSV"
+    import_page_title = "Import Location Hierarchy"
+    change_list_template = "admin/import_changelist.html"
+
+    def get_importer(self, organization, membership=None):
+        from apps.crm.locations.services import LocationImporter
+
+        return LocationImporter(organization=organization, membership=membership)
+
+    # Standard admin config
     list_display = ("name", "code", "is_active", "market_count", "created_at")
     list_filter = ("is_active",)
     search_fields = ("name", "code")

@@ -2,13 +2,14 @@
 apps.platform.rbac.admin — RBAC admin configuration.
 
 - Capability: read-only for membership users, full CRUD for superusers
-- Role: org-scoped with inline capability grants and scope rules
+- Role: org-scoped with inline capability grants, scope rules, CSV import
 - MembershipRole: manageable by membership users
 """
 
 from django.contrib import admin
 
 from apps.common.admin.base import _has_membership
+from apps.common.admin.import_mixin import ImportCSVMixin
 from apps.common.admin.sites import flowlynk_admin_site
 from apps.platform.rbac.models import (
     Capability,
@@ -64,7 +65,19 @@ class ScopeRuleInline(admin.TabularInline):
 
 
 @admin.register(Role, site=flowlynk_admin_site)
-class RoleAdmin(admin.ModelAdmin):
+class RoleAdmin(ImportCSVMixin, admin.ModelAdmin):
+    # Import configuration
+    import_url_name = "role-import"
+    import_button_label = "Import Roles CSV"
+    import_page_title = "Import Roles"
+    change_list_template = "admin/import_changelist.html"
+
+    def get_importer(self, organization, membership=None):
+        from apps.platform.rbac.services import RoleImporter
+
+        return RoleImporter(organization=organization, membership=membership)
+
+    # Standard admin config
     list_display = (
         "name",
         "code",

@@ -1,0 +1,196 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} — {{ block.super }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px;">
+
+    <h2 style="margin-bottom: 20px;">{{ title }}</h2>
+
+    {% if not result %}
+    {# ── Upload form ──────────────────────────── #}
+    <div style="background: #000; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="margin-bottom: 15px;">
+            Upload a CSV file to import. The file will be validated first (dry run)
+            before any changes are made.
+        </p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="dry_run">
+            <div style="margin-bottom: 15px;">
+                <label for="csv_file" style="display: block; font-weight: bold; margin-bottom: 5px;">
+                    CSV File:
+                </label>
+                <input type="file" name="csv_file" id="csv_file" accept=".csv,.txt"
+                       style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <button type="submit" class="button"
+                    style="padding: 8px 20px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Upload &amp; Preview
+            </button>
+        </form>
+    </div>
+
+    {% elif dry_run %}
+    {# ── Dry-run results ──────────────────────── #}
+    <h3 style="margin-bottom: 10px;">
+        Preview: {{ file_name }}
+    </h3>
+
+    {% if result.errors %}
+    {# ── Errors ── #}
+    <div style="background: #fce4e4; border: 1px solid #e74c3c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="color: #c0392b; margin-top: 0;">
+            &#x26A0; {{ result.errors|length }} Error{{ result.errors|length|pluralize }}
+        </h4>
+        <p style="color: #666; margin-bottom: 10px;">Fix these errors in your CSV and re-upload.</p>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e74c3c;">
+                    <th style="text-align: left; padding: 5px;">Line</th>
+                    <th style="text-align: left; padding: 5px;">Code</th>
+                    <th style="text-align: left; padding: 5px;">Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for err in result.errors %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 5px;">{{ err.line }}</td>
+                    <td style="padding: 5px;"><code>{{ err.code }}</code></td>
+                    <td style="padding: 5px;">{{ err.error }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Re-upload button #}
+    <a href="." class="button"
+       style="padding: 8px 20px; background: #417690; color: white; text-decoration: none; border-radius: 4px;">
+        &#x21bb; Re-upload
+    </a>
+
+    {% else %}
+    {# ── Preview counts ── #}
+    <div style="background: #eaf7ea; border: 1px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="color: #27ae60; margin-top: 0;">&#x2713; Validation Passed</h4>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #27ae60;">
+                    Will Create:
+                </td>
+                <td style="padding: 8px;">{{ result.created|length }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #e67e22;">
+                    Will Update:
+                </td>
+                <td style="padding: 8px;">{{ result.updated|length }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #95a5a6;">
+                    Unchanged:
+                </td>
+                <td style="padding: 8px;">{{ result.unchanged|length }}</td>
+            </tr>
+        </table>
+
+        {% if result.created %}
+        <details style="margin-bottom: 10px;">
+            <summary style="cursor: pointer; font-weight: bold; color: #27ae60;">
+                New items ({{ result.created|length }})
+            </summary>
+            <ul style="margin-top: 5px;">
+                {% for code in result.created %}
+                <li><code>{{ code }}</code></li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+
+        {% if result.updated %}
+        <details style="margin-bottom: 10px;">
+            <summary style="cursor: pointer; font-weight: bold; color: #e67e22;">
+                Updates ({{ result.updated|length }})
+            </summary>
+            <ul style="margin-top: 5px;">
+                {% for code in result.updated %}
+                <li><code>{{ code }}</code></li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+    </div>
+
+    {# Confirm / Cancel buttons #}
+    <div style="display: flex; gap: 10px;">
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="commit">
+            <button type="submit" class="button"
+                    style="padding: 8px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                &#x2713; Confirm Import
+            </button>
+        </form>
+        <a href="." class="button"
+           style="padding: 8px 20px; background: #95a5a6; color: white; text-decoration: none; border-radius: 4px;">
+            Cancel
+        </a>
+    </div>
+    {% endif %}
+
+    {% elif committed %}
+    {# ── Commit results ───────────────────────── #}
+    {% if result.has_errors %}
+    <div style="background: #fce4e4; border: 1px solid #e74c3c; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="color: #c0392b; margin-top: 0;">&#x26A0; Import Failed</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e74c3c;">
+                    <th style="text-align: left; padding: 5px;">Line</th>
+                    <th style="text-align: left; padding: 5px;">Code</th>
+                    <th style="text-align: left; padding: 5px;">Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for err in result.errors %}
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 5px;">{{ err.line }}</td>
+                    <td style="padding: 5px;"><code>{{ err.code }}</code></td>
+                    <td style="padding: 5px;">{{ err.error }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="background: #eaf7ea; border: 1px solid #27ae60; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="color: #27ae60; margin-top: 0;">&#x2713; Import Complete</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #27ae60;">Created:</td>
+                <td style="padding: 8px;">{{ result.created|length }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #e67e22;">Updated:</td>
+                <td style="padding: 8px;">{{ result.updated|length }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold; color: #95a5a6;">Unchanged:</td>
+                <td style="padding: 8px;">{{ result.unchanged|length }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    {# Back to list #}
+    <a href="../" class="button"
+       style="padding: 8px 20px; background: #417690; color: white; text-decoration: none; border-radius: 4px;">
+        &larr; Back to list
+    </a>
+    {% endif %}
+
+</div>
+{% endblock %}

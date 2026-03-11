@@ -357,3 +357,18 @@ def import_roles_from_csv(
         extra={"org_id": organization.pk},
     )
     return result
+
+
+class RoleImporter:
+    """
+    Adapter that wraps import_roles_from_csv to match the interface
+    expected by ImportCSVMixin (i.e. has a .run() method returning
+    a result with .created/.updated/.unchanged/.errors/.has_errors).
+    """
+
+    def __init__(self, organization, membership=None):
+        self.organization = organization
+        self.membership = membership
+
+    def run(self, csv_content: str, dry_run: bool = True, file_name: str = ""):
+        return import_roles_from_csv(self.organization, csv_content, dry_run=dry_run)
