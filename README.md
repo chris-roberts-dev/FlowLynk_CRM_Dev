@@ -358,10 +358,10 @@ These EPICs establish the infrastructure that every subsequent feature depends o
 | EPIC | Name | Status | Description |
 |------|------|--------|-------------|
 | 0 | Project Scaffold | ✅ Complete | Directory structure, settings, base classes, foundational models, admin grouping, test fixtures |
-| 1 | Tenancy Foundation | 🔲 Next | Subdomain-based tenant resolution middleware, auto-filtering querysets, landing page at base domain, invalid/suspended org handling, tenant isolation tests |
-| 2 | Identity, Membership & Auth | 🔲 Planned | Login flow (email → resolve membership → tenant redirect), org picker for multi-membership, logout to base domain, impersonation banner, session scoping |
-| 3 | RBAC | 🔲 Planned | Capability global catalog, Role (org-scoped), RoleCapability, MembershipRole, ScopeRule, RBACService with `has_capability` and `get_scope`, capability seeding migration, role import (CSV, dry-run, idempotent) |
-| 4 | Audit Logging | 🔲 Planned | AuditEvent model, AuditService, correlation ID middleware, structured JSON logging, read-only admin with filters |
+| 1 | Tenancy Foundation | ✅ Complete | Subdomain-based tenant resolution middleware, auto-filtering querysets, landing page at base domain, invalid/suspended org handling, tenant isolation tests |
+| 2 | Identity, Membership & Auth | ✅ Complete | Login flow (email → resolve membership → tenant redirect), org picker for multi-membership, logout to base domain, impersonation banner, session scoping |
+| 3 | RBAC | ✅ Complete | Capability global catalog, Role (org-scoped), RoleCapability, MembershipRole, ScopeRule, RBACService with `has_capability` and `get_scope`, capability seeding migration, role import (CSV, dry-run, idempotent) |
+| 4 | Audit Logging | ✅ Complete | AuditEvent model, AuditService, correlation ID middleware, structured JSON logging, read-only admin with filters |
 
 ### Phase 1 — Core CRM Pipeline
 
@@ -369,7 +369,7 @@ These EPICs build the lead → quote → client conversion pipeline that is cent
 
 | EPIC | Name | Status | Description |
 |------|------|--------|-------------|
-| 5 | Location Hierarchy & Import Framework | 🔲 Planned | Common import framework (CSV parsing, dry-run, row-level errors, ImportRun tracking), Region → Market → Location models, location hierarchy importer, admin upload actions |
+| 5 | Location Hierarchy & Import Framework | ✅ Complete | Common import framework (CSV parsing, dry-run, row-level errors, ImportRun tracking), Region → Market → Location models, location hierarchy importer, admin upload actions |
 | 6 | Catalog & Checklist Templates | 🔲 Planned | CatalogItem (Service / Add-on / Product / Bundle), ChecklistTemplate, checklist items, catalog importer (CSV, idempotent) |
 | 7 | Leads & Pricing Engine | 🔲 Planned | Lead model with full contact and service request fields, PricingVersion, PricingRule, PricingSnapshot, PricingService.preview(), admin "Preview Price" action that creates a snapshot without conversion |
 | 8 | Quotes & Lead→Quote Conversion | 🔲 Planned | Quote model with versions, line items, and status lifecycle, atomic LeadService.convert_to_quote() with select_for_update and idempotency, admin "Convert Lead → Quote" action |
