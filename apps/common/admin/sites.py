@@ -16,13 +16,12 @@ from django.contrib.admin import AdminSite
 
 
 class FlowLynkAdminSite(AdminSite):
-    site_header = "FlowLynk Administration"
-    site_title = "FlowLynk"
-    index_title = "Dashboard"
 
     # ── Mapping: AppConfig.name prefix → admin group heading ──
     GROUP_MAP = {
         "apps.platform.": "Platform",
+        "apps.crm.catalog": "Catalog",
+        "apps.crm.locations": "Locations",
     }
     DEFAULT_GROUP = "CRM"
 
@@ -70,7 +69,7 @@ class FlowLynkAdminSite(AdminSite):
 
         groups: dict[str, dict] = {}
         # Ensure stable ordering: Platform first, CRM second
-        for heading in ("Platform", "CRM"):
+        for heading in ("Platform", "Locations", "Catalog", "CRM"):
             groups[heading] = {
                 "name": heading,
                 "app_label": heading.lower(),

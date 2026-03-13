@@ -11,7 +11,7 @@ All environment variables are read via python-decouple so that:
 
 from pathlib import Path
 
-from decouple import Csv, config
+from decouple import config
 
 # ──────────────────────────────────────────────
 # Paths
@@ -262,3 +262,5 @@ LOGGING = {
         },
     },
 }
+
+SITE_HEADER = "Testing this"

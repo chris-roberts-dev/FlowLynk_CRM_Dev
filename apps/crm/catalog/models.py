@@ -17,7 +17,6 @@ from django.utils.text import slugify
 
 from apps.common.models.base import SoftDeleteModel, TenantModel
 
-
 # =============================================================
 # SUPPORTING ENTITIES
 # =============================================================
@@ -196,7 +195,12 @@ class ProductCategory(TenantModel):
                 raise ValidationError(
                     {"parent": "A category cannot be its own parent."}
                 )
-            if self.parent.organization_id != self.organization_id:
+            # Skip cross-org check when organization hasn't been injected yet
+            # (admin sets it in save_model after clean runs)
+            if (
+                self.organization_id
+                and self.parent.organization_id != self.organization_id
+            ):
                 raise ValidationError(
                     {"parent": "Parent must belong to the same organization."}
                 )
@@ -258,7 +262,10 @@ class ServiceCategory(TenantModel):
                 raise ValidationError(
                     {"parent": "A category cannot be its own parent."}
                 )
-            if self.parent.organization_id != self.organization_id:
+            if (
+                self.organization_id
+                and self.parent.organization_id != self.organization_id
+            ):
                 raise ValidationError(
                     {"parent": "Parent must belong to the same organization."}
                 )
@@ -467,7 +474,11 @@ class Product(TenantModel, SoftDeleteModel):
             self.sku = self.sku.strip().upper()
         if self.barcode:
             self.barcode = self.barcode.strip()
-        if self.category and self.category.organization_id != self.organization_id:
+        if (
+            self.category
+            and self.organization_id
+            and self.category.organization_id != self.organization_id
+        ):
             raise ValidationError(
                 {"category": "Category must belong to the same organization."}
             )
@@ -648,7 +659,11 @@ class Service(TenantModel, SoftDeleteModel):
         super().clean()
         if self.code:
             self.code = self.code.strip().upper()
-        if self.category and self.category.organization_id != self.organization_id:
+        if (
+            self.category
+            and self.organization_id
+            and self.category.organization_id != self.organization_id
+        ):
             raise ValidationError(
                 {"category": "Category must belong to the same organization."}
             )
@@ -717,11 +732,19 @@ class ProductSupplierLink(TenantModel):
 
     def clean(self):
         super().clean()
-        if self.product and self.product.organization_id != self.organization_id:
+        if (
+            self.product
+            and self.organization_id
+            and self.product.organization_id != self.organization_id
+        ):
             raise ValidationError(
                 {"product": "Product must belong to the same organization."}
             )
-        if self.supplier and self.supplier.organization_id != self.organization_id:
+        if (
+            self.supplier
+            and self.organization_id
+            and self.supplier.organization_id != self.organization_id
+        ):
             raise ValidationError(
                 {"supplier": "Supplier must belong to the same organization."}
             )
@@ -773,6 +796,7 @@ class ProductComponent(TenantModel):
             raise ValidationError("A product cannot be a component of itself.")
         if (
             self.parent_product
+            and self.organization_id
             and self.parent_product.organization_id != self.organization_id
         ):
             raise ValidationError(
@@ -780,6 +804,7 @@ class ProductComponent(TenantModel):
             )
         if (
             self.component_product
+            and self.organization_id
             and self.component_product.organization_id != self.organization_id
         ):
             raise ValidationError(
